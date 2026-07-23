@@ -2,6 +2,7 @@ using CSV
 using DataFrames
 using Dates
 
+# Accepte les dates déjà typées ainsi que les formats rencontrés dans le CSV.
 function _parse_curve_date(x)
     x isa Date && return x
     x isa DateTime && return Date(x)
@@ -13,6 +14,13 @@ function _parse_curve_date(x)
     end
 end
 
+"""
+    load_zero_coupon_curve(path) -> CurveMatrix
+
+Charge un CSV dont la première colonne contient les dates et les colonnes
+suivantes les taux ZC par maturité. Les noms des colonnes de taux sont convertis
+en piliers numériques, puis la courbe est nettoyée et triée.
+"""
 function load_zero_coupon_curve(path)::CurveMatrix
     df = DataFrame(CSV.File(path))
     date_col = names(df)[1]
@@ -25,6 +33,13 @@ function load_zero_coupon_curve(path)::CurveMatrix
     return clean_zero_coupon_curve(CurveMatrix(dates, pillars, values))
 end
 
+"""
+    clean_zero_coupon_curve(curve) -> CurveMatrix
+
+Supprime les dates dupliquées et les lignes contenant une valeur non finie,
+puis trie les observations par date croissante. En cas de doublon, la première
+observation valide est conservée.
+"""
 function clean_zero_coupon_curve(curve::CurveMatrix)::CurveMatrix
     seen = Set{Date}()
     keep = Int[]
@@ -39,6 +54,12 @@ function clean_zero_coupon_curve(curve::CurveMatrix)::CurveMatrix
     return CurveMatrix(curve.dates[sorted_keep], curve.pillars, curve.values[sorted_keep, :])
 end
 
+"""
+    row_at(curve, date) -> Vector{Float64}
+
+Retourne la ligne de courbe observée exactement à `date`. Une erreur explicite
+est levée si la date n'existe pas dans l'historique.
+"""
 function row_at(curve::CurveMatrix, date)::Vector{Float64}
     target = _as_date(date)
     idx = findfirst(==(target), curve.dates)
