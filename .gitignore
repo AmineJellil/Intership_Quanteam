@@ -1,0 +1,19 @@
+# Julia
+Manifest.toml
+.julia/
+*.jl.cov
+*.jl.*.cov
+*.jl.mem
+
+# Outputs
+outputs/
+results/
+*.log
+
+# Notebooks
+.ipynb_checkpoints/
+
+# OS / editors
+.DS_Store
+.vscode/
+.idea/
